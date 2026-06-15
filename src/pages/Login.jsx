@@ -98,4 +98,12 @@ export default function Login() {
             <div className="text-center mt-6 space-y-2">
               <Link to="/forgot-password" className="text-gray-400 hover:text-primary-light text-sm block">Mot de passe oublié ?</Link>
               <p className="text-gray-400 text-sm">
-                Pas encore de compte ? <Link to="/register" className="text-primary-light
+                Pas encore de compte ? <Link to="/register" className="text-primary-light hover:underline">S'inscrire</Link>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}
