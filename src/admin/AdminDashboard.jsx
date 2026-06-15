@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Shield, Users, Building2, AlertTriangle, Eye, TrendingUp, ArrowLeft, CheckCircle, XCircle } from 'lucide-react'
+import { Shield, Users, Building2, AlertTriangle, Eye, ArrowLeft, CheckCircle, XCircle } from 'lucide-react'
 import SEO from '../components/SEO'
 import { supabase, isAdmin } from '../lib/supabase'
 
@@ -27,27 +27,36 @@ export default function AdminDashboard() {
   }
 
   async function loadStats() {
-    // Count users
-    const { count: userCount } = await supabase.from('listings').select('user_id', { count: 'exact', head: true })
+    // Vrai compte d'utilisateurs uniques via leurs listings
+    const { data: usersData } = await supabase
+      .from('listings')
+      .select('user_id')
+    const uniqueUsers = new Set(usersData?.map(l => l.user_id) || []).size
 
-    // Count listings
-    const { count: listingCount } = await supabase.from('listings').select('*', { count: 'exact', head: true })
+    // Compte total des annonces
+    const { count: listingCount } = await supabase
+      .from('listings')
+      .select('*', { count: 'exact', head: true })
 
-    // Count reports
-    const { count: reportCount } = await supabase.from('scam_reports').select('*', { count: 'exact', head: true })
+    // Compte des signalements
+    const { count: reportCount } = await supabase
+      .from('scam_reports')
+      .select('*', { count: 'exact', head: true })
 
-    // Sum views
-    const { data: viewsData } = await supabase.from('listings').select('view_count')
+    // Total des vues
+    const { data: viewsData } = await supabase
+      .from('listings')
+      .select('view_count')
     const totalViews = viewsData?.reduce((sum, l) => sum + (l.view_count || 0), 0) || 0
 
     setStats({
-      users: userCount || 0,
+      users: uniqueUsers,
       listings: listingCount || 0,
       reports: reportCount || 0,
       views: totalViews
     })
 
-    // Recent listings
+    // Dernières annonces
     const { data: listings } = await supabase
       .from('listings')
       .select('*')
@@ -55,7 +64,7 @@ export default function AdminDashboard() {
       .limit(5)
     setRecentListings(listings || [])
 
-    // Recent reports
+    // Derniers signalements
     const { data: reports } = await supabase
       .from('scam_reports')
       .select('*, listings(title)')
@@ -109,7 +118,7 @@ export default function AdminDashboard() {
             <div className="glass p-4 text-center">
               <Users className="mx-auto mb-2 text-primary-light" size={24} />
               <div className="text-2xl font-bold">{stats.users}</div>
-              <div className="text-xs text-gray-400">Utilisateurs</div>
+              <div className="text-xs text-gray-400">Propriétaires actifs</div>
             </div>
             <div className="glass p-4 text-center">
               <Building2 className="mx-auto mb-2 text-blue-400" size={24} />
@@ -135,6 +144,9 @@ export default function AdminDashboard() {
                 <Building2 size={18} /> Dernières annonces
               </h2>
               <div className="space-y-3">
+                {recentListings.length === 0 && (
+                  <p className="text-gray-400 text-sm">Aucune annonce.</p>
+                )}
                 {recentListings.map(listing => (
                   <div key={listing.id} className="flex items-center justify-between p-3 bg-surface rounded-lg">
                     <div>
@@ -162,13 +174,16 @@ export default function AdminDashboard() {
                 <AlertTriangle size={18} /> Signalements récents
               </h2>
               <div className="space-y-3">
+                {recentReports.length === 0 && (
+                  <p className="text-gray-400 text-sm">Aucun signalement.</p>
+                )}
                 {recentReports.map(report => (
                   <div key={report.id} className="p-3 bg-surface rounded-lg">
                     <div className="font-medium text-sm">{report.listings?.title || 'Annonce supprimée'}</div>
                     <div className="text-xs text-gray-400 mb-2">{report.reason}</div>
                     <div className="flex gap-2">
-                      <button onClick={() => handleReport(report.id, 'confirmed_true')} className="px-3 py-1 bg-red-500/20 text-red-400 rounded text-xs hover:bg-red-500/30 transition">Confirmer</button>
-                      <button onClick={() => handleReport(report.id, 'confirmed_false')} className="px-3 py-1 bg-green-500/20 text-green-400 rounded text-xs hover:bg-green-500/30 transition">Faux</button>
+                      <button onClick={() => handleReport(report.id, 'confirmed_true')} className="px-3 py-1 bg-red-500/20 text-red-400 rounded text-xs hover:bg-red-500/30 transition">Confirmer arnaque</button>
+                      <button onClick={() => handleReport(report.id, 'confirmed_false')} className="px-3 py-1 bg-green-500/20 text-green-400 rounded text-xs hover:bg-green-500/30 transition">Faux signalement</button>
                     </div>
                   </div>
                 ))}
