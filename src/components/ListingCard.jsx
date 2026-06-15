@@ -1,10 +1,29 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { MapPin, BedDouble, BadgeCheck, Heart } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 export default function ListingCard({ listing, showFavorite = true }) {
   const [isFav, setIsFav] = useState(false)
+
+  // Charge l'état favori depuis la DB au mount
+  useEffect(() => {
+    checkFavorite()
+  }, [listing.id])
+
+  async function checkFavorite() {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
+
+    const { data } = await supabase
+      .from('favorites')
+      .select('id')
+      .eq('listing_id', listing.id)
+      .eq('user_id', session.user.id)
+      .single()
+
+    setIsFav(!!data)
+  }
 
   async function toggleFavorite(e) {
     e.preventDefault()
@@ -13,10 +32,16 @@ export default function ListingCard({ listing, showFavorite = true }) {
     if (!session) return
 
     if (isFav) {
-      await supabase.from('favorites').delete().eq('listing_id', listing.id)
+      await supabase
+        .from('favorites')
+        .delete()
+        .eq('listing_id', listing.id)
+        .eq('user_id', session.user.id)
       setIsFav(false)
     } else {
-      await supabase.from('favorites').insert({ listing_id: listing.id })
+      await supabase
+        .from('favorites')
+        .insert({ listing_id: listing.id, user_id: session.user.id })
       setIsFav(true)
     }
   }
@@ -26,9 +51,10 @@ export default function ListingCard({ listing, showFavorite = true }) {
       <div className="glass overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10">
         <div className="aspect-video bg-surface-light relative overflow-hidden">
           {listing.photos?.[0] ? (
-            <img 
-              src={listing.photos[0]} 
+            <img
+              src={listing.photos[0]}
               alt={listing.title}
+              loading="lazy"
               className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
             />
           ) : (
@@ -45,7 +71,7 @@ export default function ListingCard({ listing, showFavorite = true }) {
             {listing.price} TND/mois
           </div>
           {showFavorite && (
-            <button 
+            <button
               onClick={toggleFavorite}
               className={`absolute top-3 right-3 p-2 rounded-full transition ${isFav ? 'bg-red-500 text-white' : 'bg-dark/50 text-white hover:bg-red-500/50'}`}
             >
