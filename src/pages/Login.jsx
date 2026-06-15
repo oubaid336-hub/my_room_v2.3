@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react'
 import SEO from '../components/SEO'
 import { supabase } from '../lib/supabase'
 
 export default function Login() {
+  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -44,9 +45,7 @@ export default function Login() {
       setLoading(false)
     } else if (data.user) {
       setSuccess('Connexion réussie ! Redirection...')
-      setTimeout(() => {
-        window.location.href = '/'
-      }, 1500)
+      setTimeout(() => navigate('/'), 1500)
     }
   }
 
@@ -99,12 +98,4 @@ export default function Login() {
             <div className="text-center mt-6 space-y-2">
               <Link to="/forgot-password" className="text-gray-400 hover:text-primary-light text-sm block">Mot de passe oublié ?</Link>
               <p className="text-gray-400 text-sm">
-                Pas encore de compte ? <Link to="/register" className="text-primary-light hover:underline">S'inscrire</Link>
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
-  )
-}
+                Pas encore de compte ? <Link to="/register" className="text-primary-light
