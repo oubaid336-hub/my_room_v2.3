@@ -17,9 +17,16 @@ export default function Listings() {
     furnished: false,
   })
 
+  // Re-fetch when URL params change (e.g. clicking a city on Home)
+  useEffect(() => {
+    const cityFromUrl = searchParams.get('city') || ''
+    setFilters(prev => ({ ...prev, city: cityFromUrl }))
+  }, [searchParams])
+
+  // Re-fetch whenever filters change
   useEffect(() => {
     fetchListings()
-  }, [])
+  }, [filters])
 
   async function fetchListings() {
     setLoading(true)
