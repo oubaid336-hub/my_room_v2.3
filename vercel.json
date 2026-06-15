@@ -1,0 +1,15 @@
+{
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "https://service.prerender.io/https://myroom.tn/$1",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(googlebot|bingbot|facebookexternalhit|twitterbot|whatsapp).*"
+        }
+      ]
+    }
+  ]
+}
